@@ -1,5 +1,13 @@
 import Link from "next/link";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export default async function InstallDonePage({
   searchParams,
@@ -10,10 +18,10 @@ export default async function InstallDonePage({
   const failed = Boolean(params.error);
 
   return (
-    <main className="mx-auto flex min-h-full w-full max-w-lg flex-col justify-center px-4 py-16">
-      <Card>
+    <main className="flex min-h-full flex-col items-center justify-center bg-muted/40 px-4 py-16">
+      <Card className="w-full max-w-lg">
         <CardHeader>
-          <CardTitle>
+          <CardTitle as="h1" className="text-xl">
             {failed ? "Install callback failed" : "Installation recorded"}
           </CardTitle>
           <CardDescription>
@@ -33,10 +41,12 @@ export default async function InstallDonePage({
               Status: <span className="font-mono">{params.status}</span>
             </p>
           ) : null}
-          <Link href="/admin" className="text-primary underline-offset-4 hover:underline">
-            Open admin approval queue
-          </Link>
         </CardContent>
+        <CardFooter>
+          <Button asChild>
+            <Link href="/admin">Open admin approval queue</Link>
+          </Button>
+        </CardFooter>
       </Card>
     </main>
   );

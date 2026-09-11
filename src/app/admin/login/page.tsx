@@ -18,16 +18,22 @@ export default async function AdminLoginPage({
   const params = await searchParams;
 
   return (
-    <main className="mx-auto flex min-h-full w-full max-w-md flex-col justify-center px-4 py-16">
-      <Card>
+    <main className="flex min-h-full flex-col items-center justify-center bg-muted/40 px-4 py-16">
+      <div className="mb-8 text-center">
+        <p className="text-sm font-medium text-muted-foreground">repo-connector</p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight">Admin sign in</h1>
+      </div>
+      <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>repo-connector admin</CardTitle>
+          <CardTitle as="h2" className="text-xl">
+            Approval queue
+          </CardTitle>
           <CardDescription>
-            Approval queue is gated by ADMIN_SECRET. There are no multi-user roles.
+            Gated by ADMIN_SECRET. There are no multi-user roles.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={loginAction} className="space-y-4">
+          <form action={loginAction} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="password">Admin secret</Label>
               <Input
@@ -39,7 +45,9 @@ export default async function AdminLoginPage({
               />
             </div>
             {params.error ? (
-              <p className="text-sm text-destructive">Secret did not match.</p>
+              <p className="text-sm text-destructive" role="alert">
+                Secret did not match.
+              </p>
             ) : null}
             <Button type="submit" className="w-full">
               Sign in

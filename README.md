@@ -134,6 +134,8 @@ This task does not modify the Docent repository.
 
 `/admin` is a single-secret queue: list installs, approve / reject / re-approve / revoke, and read the audit log. It is not a product surface.
 
+The admin UI uses the [agentic-ui-shadcn](https://github.com/godesign27/agentic-ui-shadcn) token set and `ui:*` components (`button`, `card`, `input`, `label`, `badge`, `table`, `separator`, `scroll-area`). AI-namespace components are not used — this is human-authored product UI.
+
 ## Out of scope
 
 Public marketing site, self-serve signup, billing, multi-admin roles, and GitLab/Bitbucket implementations.

@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import {
   Table,
   TableBody,
@@ -61,232 +63,273 @@ export default async function AdminQueuePage({
   const audit = selectedId ? connector.listAuditEvents(selectedId) : [];
 
   return (
-    <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-1">
-          <h1 className="font-heading text-2xl font-medium">Approval queue</h1>
-          <p className="text-sm text-muted-foreground">
-            Every GitHub App install stays pending until you approve it. Tokens
-            are never issued automatically.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="secondary">{config.mode} mode</Badge>
-          <form action={logoutAction}>
-            <Button type="submit" variant="outline" size="sm">
-              Sign out
-            </Button>
-          </form>
+    <div className="min-h-full bg-muted/40">
+      <header className="border-b bg-card">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-muted-foreground">
+              repo-connector
+            </p>
+            <h1 className="text-2xl font-bold tracking-tight">Approval queue</h1>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="secondary">{config.mode} mode</Badge>
+            <form action={logoutAction}>
+              <Button type="submit" variant="outline" size="sm">
+                Sign out
+              </Button>
+            </form>
+          </div>
         </div>
       </header>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Request an install</CardTitle>
-          <CardDescription>
-            Creates a pending client and a signed GitHub (or mock) install URL.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <form
-            action={requestInstallAction}
-            className="flex flex-col gap-3 sm:flex-row sm:items-end"
-          >
-            <div className="min-w-0 flex-1 space-y-2">
-              <Label htmlFor="clientId">Client ID</Label>
-              <Input
-                id="clientId"
-                name="clientId"
-                placeholder="docent-tenant-42"
-                required
-              />
-            </div>
-            <Button type="submit">Create install request</Button>
-          </form>
-          {params.installUrl ? (
-            <p className="break-all font-mono text-xs text-muted-foreground">
-              Install URL: {params.installUrl}
-            </p>
-          ) : null}
-        </CardContent>
-      </Card>
+      <main className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8">
+        <p className="max-w-2xl text-base text-muted-foreground">
+          Every GitHub App install stays pending until you approve it. Tokens
+          are never issued automatically.
+        </p>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Installations</CardTitle>
-          <CardDescription>
-            {installations.length === 0
-              ? "No installations yet. Request one above or wait for a webhook."
-              : `${installations.length} tracked install${installations.length === 1 ? "" : "s"}.`}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {installations.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              The queue is empty.
-            </p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Client</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Account</TableHead>
-                  <TableHead>Scope</TableHead>
-                  <TableHead>Updated</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {installations.map((row) => (
-                  <TableRow
-                    key={row.clientId}
-                    data-state={
-                      row.clientId === selectedId ? "selected" : undefined
-                    }
-                  >
-                    <TableCell>
-                      <Link
-                        href={`/admin?clientId=${encodeURIComponent(row.clientId)}`}
-                        className="font-mono text-xs hover:underline"
-                      >
-                        {row.clientId}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={statusVariant(row.status)}>
-                        {row.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{row.accountLogin ?? "—"}</TableCell>
-                    <TableCell>
-                      {row.permissionsExcess ? (
-                        <Badge variant="destructive">excess</Badge>
-                      ) : row.bound ? (
-                        <span>read-only</span>
-                      ) : (
-                        <span className="text-muted-foreground">unbound</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {new Date(row.updatedAt).toLocaleString()}
-                    </TableCell>
+        <Card>
+          <CardHeader>
+            <CardTitle as="h2" className="text-xl">
+              Request an install
+            </CardTitle>
+            <CardDescription>
+              Creates a pending client and a signed GitHub (or mock) install URL.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <form
+              action={requestInstallAction}
+              className="flex flex-col gap-4 sm:flex-row sm:items-end"
+            >
+              <div className="min-w-0 flex-1 space-y-2">
+                <Label htmlFor="clientId">Client ID</Label>
+                <Input
+                  id="clientId"
+                  name="clientId"
+                  placeholder="docent-tenant-42"
+                  required
+                />
+              </div>
+              <Button type="submit">Create install request</Button>
+            </form>
+            {params.installUrl ? (
+              <p className="break-all font-mono text-xs text-muted-foreground">
+                Install URL: {params.installUrl}
+              </p>
+            ) : null}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle as="h2" className="text-xl">
+              Installations
+            </CardTitle>
+            <CardDescription>
+              {installations.length === 0
+                ? "No installations yet. Request one above or wait for a webhook."
+                : `${installations.length} tracked install${installations.length === 1 ? "" : "s"}.`}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {installations.length === 0 ? (
+              <p className="text-sm text-muted-foreground">The queue is empty.</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Client</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Account</TableHead>
+                    <TableHead>Scope</TableHead>
+                    <TableHead>Updated</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                </TableHeader>
+                <TableBody>
+                  {installations.map((row) => (
+                    <TableRow
+                      key={row.clientId}
+                      data-state={
+                        row.clientId === selectedId ? "selected" : undefined
+                      }
+                    >
+                      <TableCell>
+                        <Link
+                          href={`/admin?clientId=${encodeURIComponent(row.clientId)}`}
+                          className="font-mono text-sm underline-offset-4 hover:underline"
+                        >
+                          {row.clientId}
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={statusVariant(row.status)}>
+                          {row.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{row.accountLogin ?? "—"}</TableCell>
+                      <TableCell>
+                        {row.permissionsExcess ? (
+                          <Badge variant="destructive">excess</Badge>
+                        ) : row.bound ? (
+                          <span>read-only</span>
+                        ) : (
+                          <span className="text-muted-foreground">unbound</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {new Date(row.updatedAt).toLocaleString()}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Selected installation</CardTitle>
-          <CardDescription>
-            {selected
-              ? `${selected.clientId} · ${selected.provider}`
-              : "Choose a client from the table to approve, reject, or inspect the audit log."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {!selected ? (
-            <p className="text-sm text-muted-foreground">Nothing selected.</p>
-          ) : (
-            <>
-              <dl className="grid gap-2 text-sm sm:grid-cols-2">
-                <div>
-                  <dt className="text-muted-foreground">Bound to provider</dt>
-                  <dd>{selected.bound ? "yes" : "no"}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Unmatched webhook</dt>
-                  <dd>{selected.unbound ? "yes" : "no"}</dd>
-                </div>
-                <div>
-                  <dt className="text-muted-foreground">Permissions</dt>
-                  <dd className="font-mono text-xs">
-                    {JSON.stringify(selected.permissions)}
-                  </dd>
-                </div>
-              </dl>
+        <Card>
+          <CardHeader>
+            <CardTitle as="h2" className="text-xl">
+              Selected installation
+            </CardTitle>
+            <CardDescription>
+              {selected
+                ? `${selected.clientId} · ${selected.provider}`
+                : "Choose a client from the table to approve, reject, or inspect the audit log."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {!selected ? (
+              <p className="text-sm text-muted-foreground">Nothing selected.</p>
+            ) : (
+              <>
+                <dl className="grid gap-4 text-sm sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <dt className="text-muted-foreground">Bound to provider</dt>
+                    <dd>{selected.bound ? "yes" : "no"}</dd>
+                  </div>
+                  <div className="space-y-1">
+                    <dt className="text-muted-foreground">Unmatched webhook</dt>
+                    <dd>{selected.unbound ? "yes" : "no"}</dd>
+                  </div>
+                  <div className="space-y-1 sm:col-span-2">
+                    <dt className="text-muted-foreground">Permissions</dt>
+                    <dd className="font-mono text-xs">
+                      {JSON.stringify(selected.permissions)}
+                    </dd>
+                  </div>
+                </dl>
 
-              {selected.permissionsExcess ? (
-                <p className="text-sm text-destructive">
-                  This install grants more than contents:read and metadata:read.
-                  Approve will record, but token issuance stays blocked until
-                  permissions are corrected and the install is rebound.
-                </p>
-              ) : null}
-
-              <div className="flex flex-wrap gap-2">
-                {config.mode === "mock" && !selected.bound && !selected.unbound ? (
-                  <form action={completeMockInstallAction}>
-                    <input type="hidden" name="clientId" value={selected.clientId} />
-                    <Button type="submit" variant="secondary">
-                      Complete mock install
-                    </Button>
-                  </form>
-                ) : null}
-                {selected.bound &&
-                !selected.unbound &&
-                (selected.status === "pending" ||
-                  selected.status === "rejected" ||
-                  selected.status === "revoked") ? (
-                  <form action={approveAction}>
-                    <input type="hidden" name="clientId" value={selected.clientId} />
-                    <Button type="submit">
-                      {selected.status === "pending" ? "Approve" : "Re-approve"}
-                    </Button>
-                  </form>
-                ) : null}
-                {selected.status === "pending" || selected.status === "approved" ? (
-                  <form action={rejectAction}>
-                    <input type="hidden" name="clientId" value={selected.clientId} />
-                    <Button type="submit" variant="secondary">
-                      Reject
-                    </Button>
-                  </form>
-                ) : null}
-                {selected.status !== "revoked" ? (
-                  <form action={revokeAction}>
-                    <input type="hidden" name="clientId" value={selected.clientId} />
-                    <Button type="submit" variant="destructive">
-                      Revoke
-                    </Button>
-                  </form>
-                ) : null}
-              </div>
-
-              <div className="space-y-2">
-                <h2 className="text-sm font-medium">Audit log</h2>
-                {audit.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">
-                    No events for this client.
+                {selected.permissionsExcess ? (
+                  <p className="text-sm text-destructive">
+                    This install grants more than contents:read and
+                    metadata:read. Approve will record, but token issuance stays
+                    blocked until permissions are corrected and the install is
+                    rebound.
                   </p>
-                ) : (
-                  <ul className="divide-y rounded-lg border">
-                    {audit.map((event) => (
-                      <li key={event.id} className="px-3 py-2 text-sm">
-                        <div className="flex flex-col gap-1 sm:flex-row sm:justify-between">
-                          <span className="font-mono text-xs">{event.action}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(event.createdAt).toLocaleString()} ·{" "}
-                            {event.actor}
-                          </span>
-                        </div>
-                        {event.detail ? (
-                          <p className="text-xs text-muted-foreground">
-                            {event.detail}
-                          </p>
-                        ) : null}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
-    </main>
+                ) : null}
+
+                <div className="flex flex-wrap gap-3">
+                  {config.mode === "mock" &&
+                  !selected.bound &&
+                  !selected.unbound ? (
+                    <form action={completeMockInstallAction}>
+                      <input
+                        type="hidden"
+                        name="clientId"
+                        value={selected.clientId}
+                      />
+                      <Button type="submit" variant="secondary">
+                        Complete mock install
+                      </Button>
+                    </form>
+                  ) : null}
+                  {selected.bound &&
+                  !selected.unbound &&
+                  (selected.status === "pending" ||
+                    selected.status === "rejected" ||
+                    selected.status === "revoked") ? (
+                    <form action={approveAction}>
+                      <input
+                        type="hidden"
+                        name="clientId"
+                        value={selected.clientId}
+                      />
+                      <Button type="submit">
+                        {selected.status === "pending" ? "Approve" : "Re-approve"}
+                      </Button>
+                    </form>
+                  ) : null}
+                  {selected.status === "pending" ||
+                  selected.status === "approved" ? (
+                    <form action={rejectAction}>
+                      <input
+                        type="hidden"
+                        name="clientId"
+                        value={selected.clientId}
+                      />
+                      <Button type="submit" variant="secondary">
+                        Reject
+                      </Button>
+                    </form>
+                  ) : null}
+                  {selected.status !== "revoked" ? (
+                    <form action={revokeAction}>
+                      <input
+                        type="hidden"
+                        name="clientId"
+                        value={selected.clientId}
+                      />
+                      <Button type="submit" variant="destructive">
+                        Revoke
+                      </Button>
+                    </form>
+                  ) : null}
+                </div>
+
+                <Separator />
+
+                <div className="space-y-3">
+                  <h3 className="text-sm font-medium">Audit log</h3>
+                  {audit.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">
+                      No events for this client.
+                    </p>
+                  ) : (
+                    <ScrollArea className="h-64 rounded-md border">
+                      <ul>
+                        {audit.map((event) => (
+                          <li
+                            key={event.id}
+                            className="border-b px-4 py-3 last:border-b-0"
+                          >
+                            <div className="flex flex-col gap-1 sm:flex-row sm:justify-between">
+                              <span className="font-mono text-sm">
+                                {event.action}
+                              </span>
+                              <span className="text-sm text-muted-foreground">
+                                {new Date(event.createdAt).toLocaleString()} ·{" "}
+                                {event.actor}
+                              </span>
+                            </div>
+                            {event.detail ? (
+                              <p className="mt-1 text-sm text-muted-foreground">
+                                {event.detail}
+                              </p>
+                            ) : null}
+                          </li>
+                        ))}
+                      </ul>
+                    </ScrollArea>
+                  )}
+                </div>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </main>
+    </div>
   );
 }
