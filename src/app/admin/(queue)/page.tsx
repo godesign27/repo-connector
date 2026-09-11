@@ -241,7 +241,7 @@ export default async function AdminQueuePage({
                         name="clientId"
                         value={selected.clientId}
                       />
-                      <Button type="submit" variant="secondary">
+                      <Button type="submit" variant="success">
                         Complete mock install
                       </Button>
                     </form>
@@ -270,7 +270,7 @@ export default async function AdminQueuePage({
                         name="clientId"
                         value={selected.clientId}
                       />
-                      <Button type="submit" variant="secondary">
+                      <Button type="submit" variant="destructive">
                         Reject
                       </Button>
                     </form>
@@ -282,7 +282,7 @@ export default async function AdminQueuePage({
                         name="clientId"
                         value={selected.clientId}
                       />
-                      <Button type="submit" variant="destructive">
+                      <Button type="submit" variant="warning">
                         Revoke
                       </Button>
                     </form>
