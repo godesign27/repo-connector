@@ -2,6 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { adminHref, type StatusFilter } from "@/app/admin/href";
 import {
   ADMIN_COOKIE,
   adminCookieValue,
@@ -11,6 +12,15 @@ import { getConfig, getConnector } from "@/lib/server-connector";
 
 async function guard(): Promise<void> {
   await requireAdminSession(getConfig().adminSecret);
+}
+
+function queueHref(clientId: string, status: StatusFilter): string {
+  return adminHref({
+    view: "queue",
+    status,
+    auditScope: "selected",
+    clientId,
+  });
 }
 
 export async function loginAction(formData: FormData): Promise<void> {
@@ -27,7 +37,9 @@ export async function loginAction(formData: FormData): Promise<void> {
     path: "/",
     maxAge: 60 * 60 * 24 * 7,
   });
-  redirect("/admin");
+  redirect(
+    adminHref({ view: "queue", status: "pending", auditScope: "all" }),
+  );
 }
 
 export async function logoutAction(): Promise<void> {
@@ -41,7 +53,13 @@ export async function requestInstallAction(formData: FormData): Promise<void> {
   const clientId = String(formData.get("clientId") ?? "").trim();
   const result = await getConnector().requestInstallation({ clientId });
   redirect(
-    `/admin?clientId=${encodeURIComponent(clientId)}&installUrl=${encodeURIComponent(result.installUrl)}`,
+    adminHref({
+      view: "queue",
+      status: "pending",
+      auditScope: "selected",
+      clientId,
+      installUrl: result.installUrl,
+    }),
   );
 }
 
@@ -51,26 +69,26 @@ export async function completeMockInstallAction(
   await guard();
   const clientId = String(formData.get("clientId") ?? "").trim();
   getConnector().completeMockInstall(clientId);
-  redirect(`/admin?clientId=${encodeURIComponent(clientId)}`);
+  redirect(queueHref(clientId, "pending"));
 }
 
 export async function approveAction(formData: FormData): Promise<void> {
   await guard();
   const clientId = String(formData.get("clientId") ?? "").trim();
   await getConnector().approveInstallation(clientId, { actor: "admin" });
-  redirect(`/admin?clientId=${encodeURIComponent(clientId)}`);
+  redirect(queueHref(clientId, "approved"));
 }
 
 export async function rejectAction(formData: FormData): Promise<void> {
   await guard();
   const clientId = String(formData.get("clientId") ?? "").trim();
   await getConnector().rejectInstallation(clientId, { actor: "admin" });
-  redirect(`/admin?clientId=${encodeURIComponent(clientId)}`);
+  redirect(queueHref(clientId, "rejected"));
 }
 
 export async function revokeAction(formData: FormData): Promise<void> {
   await guard();
   const clientId = String(formData.get("clientId") ?? "").trim();
   await getConnector().revokeAccess(clientId, { actor: "admin" });
-  redirect(`/admin?clientId=${encodeURIComponent(clientId)}`);
+  redirect(queueHref(clientId, "revoked"));
 }
