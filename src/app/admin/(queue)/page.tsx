@@ -157,31 +157,37 @@ function nextStepCopy(
 }
 
 function SegmentedControl({
+  label,
   items,
 }: {
+  label: string;
   items: { href: string; label: string; active: boolean }[];
 }) {
   return (
-    <div
-      role="tablist"
-      className="inline-flex max-w-full flex-wrap items-center gap-1 rounded-md bg-muted p-1 text-muted-foreground"
-    >
-      {items.map((item) => (
-        <Link
-          key={item.label}
-          href={item.href}
-          role="tab"
-          aria-selected={item.active}
-          className={cn(
-            "inline-flex items-center justify-center rounded-sm px-3 py-1.5 text-sm font-medium transition-all",
-            item.active
-              ? "bg-background text-foreground shadow-sm"
-              : "hover:text-foreground",
-          )}
-        >
-          {item.label}
-        </Link>
-      ))}
+    <div className="flex w-full flex-col gap-2">
+      <p className="text-sm font-medium text-muted-foreground">{label}</p>
+      <div
+        role="tablist"
+        aria-label={label}
+        className="flex w-full flex-wrap items-center gap-1 rounded-md bg-muted p-1 text-muted-foreground"
+      >
+        {items.map((item) => (
+          <Link
+            key={item.label}
+            href={item.href}
+            role="tab"
+            aria-selected={item.active}
+            className={cn(
+              "inline-flex items-center justify-center rounded-sm px-3 py-1.5 text-sm font-medium transition-all",
+              item.active
+                ? "bg-background text-foreground shadow-sm"
+                : "hover:text-foreground",
+            )}
+          >
+            {item.label}
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }
@@ -201,10 +207,11 @@ export default async function AdminQueuePage({
   const config = getConfig();
   const connector = getConnector();
   const installations = connector.listInstallations();
-  const selected = query.clientId
-    ? installations.find((row) => row.clientId === query.clientId)
-    : undefined;
   const visible = filterInstallations(installations, query.status);
+  const selected =
+    (query.clientId
+      ? installations.find((row) => row.clientId === query.clientId)
+      : undefined) ?? visible[0];
   const allAudit = connector.listAuditEvents();
   const auditEvents: AuditEvent[] =
     query.auditScope === "selected" && query.clientId
@@ -240,8 +247,9 @@ export default async function AdminQueuePage({
       </header>
 
       <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8">
-        <div className="space-y-3">
+        <div className="flex flex-col gap-4">
           <SegmentedControl
+            label="View"
             items={[
               {
                 label: "Installations",
@@ -257,6 +265,7 @@ export default async function AdminQueuePage({
           />
           {query.view === "queue" ? (
             <SegmentedControl
+              label="Show"
               items={(
                 [
                   ["pending", "Needs review"],
@@ -273,6 +282,7 @@ export default async function AdminQueuePage({
             />
           ) : (
             <SegmentedControl
+              label="Show"
               items={[
                 {
                   label: "All activity",
@@ -337,36 +347,22 @@ function QueueView({
       <Card>
         <CardHeader>
           <CardTitle as="h2" className="text-xl">
-            How this works
+            Next step
           </CardTitle>
           <CardDescription>
-            You are the human gate. Tokens stay off until you approve.
+            Connect GitHub first, then approve. Tokens stay off until you do.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ol className="grid gap-4 text-sm sm:grid-cols-3">
-            <li className="space-y-1">
-              <p className="font-medium">1. Start a client</p>
-              <p className="text-muted-foreground">
-                Give the product a client ID so we can track this install.
-              </p>
-            </li>
-            <li className="space-y-1">
-              <p className="font-medium">2. Connect GitHub</p>
-              <p className="text-muted-foreground">
-                {configMode === "mock"
-                  ? "In mock mode, complete the install here. In production, the owner installs the GitHub App."
-                  : "The owner installs the GitHub App with read-only contents access."}
-              </p>
-            </li>
-            <li className="space-y-1">
-              <p className="font-medium">3. Approve access</p>
-              <p className="text-muted-foreground">
-                Only then can Docent (or another product) fetch a token and repo
-                list.
-              </p>
-            </li>
-          </ol>
+          {!selected ? (
+            <p className="text-sm text-muted-foreground">{emptyFilter}</p>
+          ) : (
+            <SelectedPanel
+              selected={selected}
+              configMode={configMode}
+              query={query}
+            />
+          )}
         </CardContent>
       </Card>
 
@@ -376,79 +372,59 @@ function QueueView({
             {query.status === "pending" ? "Needs your review" : "Installations"}
           </CardTitle>
           <CardDescription>
-            Select a row, then follow the next step on the right.
+            Click a client to change the next step above.
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
-          <div>
-            {visible.length === 0 ? (
-              <p className="text-sm text-muted-foreground">{emptyFilter}</p>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Client</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Next step</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {visible.map((row) => {
-                    const step = nextStepCopy(row, configMode);
-                    return (
-                      <TableRow
-                        key={row.clientId}
-                        data-state={
-                          row.clientId === selected?.clientId
-                            ? "selected"
-                            : undefined
-                        }
-                      >
-                        <TableCell>
-                          <Link
-                            href={adminHref({
-                              ...query,
-                              view: "queue",
-                              clientId: row.clientId,
-                            })}
-                            className="font-mono text-sm underline-offset-4 hover:underline"
-                          >
-                            {row.clientId}
-                          </Link>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={statusVariant(row.status)}>
-                            {row.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {step.headline}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            )}
-          </div>
-
-          <div className="rounded-md border bg-background p-4">
-            {!selected ? (
-              <div className="space-y-2">
-                <h3 className="text-base font-semibold">Choose a client</h3>
-                <p className="text-sm text-muted-foreground">
-                  Pick a row to see what to do next. You only approve after
-                  GitHub is connected.
-                </p>
-              </div>
-            ) : (
-              <SelectedPanel
-                selected={selected}
-                configMode={configMode}
-                query={query}
-              />
-            )}
-          </div>
+        <CardContent>
+          {visible.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{emptyFilter}</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Client</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Next step</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {visible.map((row) => {
+                  const step = nextStepCopy(row, configMode);
+                  return (
+                    <TableRow
+                      key={row.clientId}
+                      data-state={
+                        row.clientId === selected?.clientId
+                          ? "selected"
+                          : undefined
+                      }
+                    >
+                      <TableCell>
+                        <Link
+                          href={adminHref({
+                            ...query,
+                            view: "queue",
+                            clientId: row.clientId,
+                          })}
+                          className="font-mono text-sm underline-offset-4 hover:underline"
+                        >
+                          {row.clientId}
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={statusVariant(row.status)}>
+                          {row.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {step.headline}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
 
