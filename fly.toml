@@ -1,0 +1,29 @@
+app = "godesign-repo-connector"
+primary_region = "sjc"
+
+[build]
+
+[env]
+  PORT = "8080"
+  HOSTNAME = "0.0.0.0"
+  NODE_ENV = "production"
+  CONNECTOR_MODE = "mock"
+  DATABASE_PATH = "/data/repo-connector.sqlite"
+  APP_BASE_URL = "https://godesign-repo-connector.fly.dev"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ["app"]
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
+
+[[mounts]]
+  source = "data"
+  destination = "/data"

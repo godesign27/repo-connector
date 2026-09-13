@@ -85,7 +85,7 @@ Do **not** import Docent into this repo. In Docent’s ingestion step, call repo
 import { RepoConnectorClient } from "repo-connector";
 
 const connector = new RepoConnectorClient({
-  baseUrl: process.env.REPO_CONNECTOR_URL!, // e.g. http://127.0.0.1:43127
+  baseUrl: process.env.REPO_CONNECTOR_URL!, // local: http://127.0.0.1:43127 — Fly: https://godesign-repo-connector.fly.dev
   apiKey: process.env.REPO_CONNECTOR_API_KEY!,
   actor: "docent-ingestion",
 });
@@ -129,6 +129,44 @@ curl -sS "$REPO_CONNECTOR_URL/v1/installations/docent:tenant-1/repos" \
 Ingestion should treat `pending`, `rejected`, `revoked`, and `not_found` as hard stops. Never store the installation token as a permanent credential; mint a new one when it expires.
 
 This task does not modify the Docent repository.
+
+On Fly, set Docent MCP env to:
+
+- `REPO_CONNECTOR_URL=https://godesign-repo-connector.fly.dev`
+- `REPO_CONNECTOR_API_KEY` — same value as the Fly secret
+
+## Deploy (Fly.io)
+
+Config lives in `Dockerfile` and `fly.toml` (`godesign-repo-connector`, region `sjc`). First deploy can stay in `CONNECTOR_MODE=mock`. Switch to `github` after the GitHub App exists.
+
+```bash
+fly auth login   # use godesigngo@gmail.com
+fly apps create godesign-repo-connector
+fly volumes create data --region sjc --size 1
+fly secrets set \
+  ENCRYPTION_KEY="$(openssl rand -base64 32)" \
+  ADMIN_SECRET="choose-a-strong-admin-secret" \
+  REPO_CONNECTOR_API_KEY="$(openssl rand -base64 32)"
+fly deploy
+```
+
+After deploy: `https://godesign-repo-connector.fly.dev/admin`
+
+To go live with GitHub (not mock), create a GitHub App with **Contents: Read-only** and **Metadata: Read-only**, then:
+
+```bash
+fly secrets set \
+  GITHUB_APP_ID=... \
+  GITHUB_APP_SLUG=... \
+  GITHUB_APP_PRIVATE_KEY="..." \
+  GITHUB_WEBHOOK_SECRET=...
+fly secrets set CONNECTOR_MODE=github
+```
+
+GitHub App URLs:
+
+- Setup: `https://godesign-repo-connector.fly.dev/install/callback`
+- Webhook: `https://godesign-repo-connector.fly.dev/api/webhooks/github`
 
 ## Admin
 
